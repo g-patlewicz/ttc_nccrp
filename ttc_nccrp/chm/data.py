@@ -1,5 +1,7 @@
 from pathlib import Path
 from rdkit import Chem
+import pandas as pd
+import numpy as np
 
 
 hpc_dict = {'Aflatoxin': {'COC1=C2C3=C(C(=O)OCC3)C(=O)OC2=C2C3C=COC3OC2=C1',
@@ -50,3 +52,18 @@ op_dict = {'OPs': {'CP(=O)(C)O',
   '[NX3]([CX4,#1,S])([CX4,#1,S])C(=[S])[S-]'}}
 
 opc_smarts = {k:[Chem.MolFromSmarts(e) for e in v] for k,v in op_dict.items()}
+
+genetox_path = Path(__file__).parent / "ISS.csv"
+genetox = pd.read_csv(genetox_path)
+genetox = (genetox
+ .filter(['ID', 'Alert_name', 'SMARTS'])
+)
+
+genetox_dict = {}
+for i,group in genetox.groupby('ID'):
+    key = [name for name in group['ID'] if name!=' '][0]
+    value = set(group['SMARTS'])
+    genetox_dict[key]=value
+
+genetox_dict2 = {k : [Chem.MolFromSmarts(s) for s in v] for k,v in genetox_dict.items()}
+genetox_smarts = {k:v for k,v in genetox_dict2.items() if k not in ['SA14_gen', 'SA29_gen', 'SA39_gen_and_nogen', 'SA25_gen']}
