@@ -1,7 +1,7 @@
 ttc_nccrp
 ==============================
 
-Exploring TTC-like approach for LVEs.
+Repackaging code from https://github.com/g-patlewicz/ttc_exclusions
 
 Project Organization
 ------------
