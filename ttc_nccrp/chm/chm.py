@@ -73,38 +73,67 @@ class MoleculeProcessor:
         
 
     def genetox_alerts(self):
+    # Define the primary pattern for genetox alert
         pattern = 'a[N]=[N]a'
         pattern_mol = Chem.MolFromSmarts(pattern)
 
-# Define the sub-patterns that must not be present
-        sub_patterns =  '[$(a:a(S(=[OX1])(=[OX1])([O-,OX2H1]))),$(a:a:a(S(=[OX1])(=[OX1])([O-,OX2H1]))),$(a:a:a:a(S(=[OX1])(=[OX1])([O-,OX2H1]))),$(a:a:a:a:a(S(=[OX1])(=[OX1])([O-,OX2H1])))][N]=[N][$(a:a(S(=[OX1])(=[OX1])([O-,OX2H1]))),$(a:a:a(S(=[OX1])(=[OX1])([O-,OX2H1]))),$(a:a:a:a(S(=[OX1])(=[OX1])([O-,OX2H1]))),$(a:a:a:a:a(S(=[OX1])(=[OX1])([O-,OX2H1])))]'
+        # Define sub-patterns that must NOT be present
+        sub_patterns = [
+            '[$(a:a(S(=[OX1])(=[OX1])([O-,OX2H1])))]N=N[$(a:a(S(=[OX1])(=[OX1])([O-,OX2H1])))]',
+            '[$(a:a:a(S(=[OX1])(=[OX1])([O-,OX2H1])))]N=N[$(a:a:a(S(=[OX1])(=[OX1])([O-,OX2H1])))]',
+            '[$(a:a:a:a(S(=[OX1])(=[OX1])([O-,OX2H1])))]N=N[$(a:a:a:a(S(=[OX1])(=[OX1])([O-,OX2H1])))]',
+            '[$(a:a:a:a:a(S(=[OX1])(=[OX1])([O-,OX2H1])))]N=N[$(a:a:a:a:a(S(=[OX1])(=[OX1])([O-,OX2H1])))]'
+        ]
+
+        # Retrieve the molecule object safely
+        mol = self.molecules.get(self.dtxsid)
+        if not mol:
+            return False  # No molecule available, return False
+
+        # Check for primary genetox pattern
+        if mol.HasSubstructMatch(pattern_mol):
+            # Ensure none of the exclusion sub-patterns are present
+            if not any(mol.HasSubstructMatch(Chem.MolFromSmarts(sp)) for sp in sub_patterns):
+                return 'Genetox'
+
+        # Check additional genetox SMARTS patterns stored in `genetox_smarts`
+        if any(mol.HasSubstructMatch(e) for v in genetox_smarts.values() for e in v):
+            return 'Genetox'
+
+        return False  # No genetox alerts found
+
+    def decision_tree(self):
+    # Check if the substance is inorganic
+        inorg_filter = (
+            self.metal_ions() != 'essential metal ion' and 
+            (self.has_metal_atom() == 'inorganic' or self.P_inorg() == 'inorganic')
+        )
+
+        if inorg_filter:
+            return 'Inorganic - TTC not applicable'
+
+        # Check for DLC, Steroid, or HPC
+        if self.dlc() == 'Dioxin-like':
+            return 'DLC - TTC not applicable'
+        if self.steroid() == 'Steroid':
+            return 'Steroid - TTC not applicable'
+        if self.hpc() == 'HPC':
+            return 'HPC - TTC not applicable'
+
+        # Check for genetic toxicity *before* OPCs
+        if self.genetox_alerts() == 'Genetox':
+            return 'GeneTox - TTC of 0.15 ug/day'
+
+        # Check for OPCs
+        if self.opc() == 'OP or carbamate':
+            return 'OP_carbamate - TTC of 18 ug/day'
+
+        # If none of the above conditions were met, apply Cramer classification
+        return 'Likely Cramer class applicable'    
         
-        if self.molecules[self.dtxsid] is None:
-            return False
-        elif self.molecules[self.dtxsid].HasSubstructMatch(pattern_mol) and not self.molecules[self.dtxsid].HasSubstructMatch(Chem.MolFromSmarts(sub_patterns)):
-            return 'Genetox'
-        elif any(self.molecules[self.dtxsid].HasSubstructMatch(e) for v in genetox_smarts.values() for e in v):
-            return 'Genetox'
-       
         
    
-    def decision_tree(self):
-        inorg_filter = self.metal_ions() != 'essential metal ion' and (self.has_metal_atom() == 'inorganic' or self.P_inorg() == 'inorganic')
-
-        if inorg_filter is True:
-            return 'Inorganic - TTC not applicable'
-        elif inorg_filter is False and self.dlc() == 'Dioxin-like':
-            return 'DLC - TTC not applicable'
-        elif (inorg_filter is False and self.dlc() != 'Dioxin-like') and self.steroid() == 'Steroid':
-            return 'Steroid - TTC not applicable'
-        elif (inorg_filter is False and self.dlc() != 'Dioxin-like' and self.steroid() != 'Steroid') and self.hpc() == 'HPC':
-            return 'HPC - TTC not applicable'
-        elif (inorg_filter is False and self.dlc() != 'Dioxin-like' and self.steroid() != 'Steroid' and self.hpc() != 'HPC') and self.genetox_alerts() == 'Genetox':
-            return 'GeneTox - TTC of 0.15 ug/day'
-        elif (inorg_filter is False and self.dlc() != 'Dioxin-like' and self.steroid() != 'Steroid' and self.hpc() != 'HPC' and self.genetox_alerts() != 'Genetox') and self.opc() == 'OP or carbamate':
-             return 'OP_carbamate - TTC of 18 ug/day'
-        else:
-             return 'Likely Cramer class applicable'
+    
 
 
     def process_batch(self, df):

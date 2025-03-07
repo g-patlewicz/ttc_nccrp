@@ -29,6 +29,8 @@ SA22_gen,Azide and triazene groups,,[N]=[N]=[N]
 SA23_gen,Aliphatic N-nitro,,[C!r][NH1]N(=O)O
 SA23_gen,Aliphatic N-nitro,,[C!r]N(A)N(=O)O
 SA24_gen,"a,b unsaturated alkoxy",,"[!$([#6](=O)[!O]),#1][C!H0;!R]([!$([#6](=O)[!O]),#1])!@;=[C!H0;!R]O[#6]"
+SA24_gen,"a,b unsaturated alkoxy",,C[CX3;H1]=[CX3;H1][OX2][#6]
+SA24_gen,"a,b unsaturated alkoxy",,[CX4][OX2][CX3H1]=[CX3H1]
 SA25_gen,Aromatic nitroso group,,[a;!$(a(a[A;!#1])(a[A;!#1]));!$(aa[CX3](=O)[OX2H1]);!$(aa[SX4](=[OX1])(=[OX1])([O]));!$(aaa[SX4](=[OX1])(=[OX1])([O]));!$(aaaa[SX4](=[OX1])(=[OX1])([O]));!$(aaaaa[SX4](=[OX1])(=[OX1])([O]));!$(aaaaaa[SX4](=[OX1])(=[OX1])([O]))]!@[$([NX2]=O)]
 SA26_gen,Aromatic ring N-oxide,,[n+]!@[O-]
 SA27_gen,Nitro aromatic,,"[a;!$(a(a[A;!#1;!H])(a[A;!#1;!H]));!$(aa[CX3](=O)[OX2H1]);!$(aa[SX4](=[OX1])(=[OX1])([OX2H1]));!$(aaa[SX4](=[OX1])(=[OX1])([OX2H1]));!$(aaaa[SX4](=[OX1])(=[OX1])([OX2H1]));!$(aaaaa[SX4](=[OX1])(=[OX1])([OX2H1]));!$(aaaaaa[SX4](=[OX1])(=[OX1])([OX2H1]))]([$([N+]([O-])=O),$([N](=O)=O)])"
